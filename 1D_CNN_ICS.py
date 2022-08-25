@@ -146,7 +146,7 @@ def begin_test():
                     num =0
 
 #调用处理数据函数
-while (1==1):
+while (1==0):
     make_xlsx()
     break
 
@@ -162,7 +162,7 @@ test_in = np.lib.stride_tricks.as_strided(test_in, shape=(test_out.shape[0], 256
 
 
 #训练过程，可以跳过，直接调用训练好的模型，开始测试
-while (1==1):
+while (1==0):
     history = build().fit(get_train_data(worksheet_test,1), epochs=4, steps_per_epoch=2000, batch_size=100,
                 validation_data=(test_in, test_out), validation_batch_size=100)#5~10次便可以实现收敛，次数过多容易导致过拟合
     build().save('1D_CNN_ICS.hdf5')
