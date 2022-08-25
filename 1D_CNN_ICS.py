@@ -39,10 +39,10 @@ def build():
 #加载原始数据
 #处理数据后保存为新文件
 def make_xlsx():
-    wbn = xlrd3.open_workbook(u'C:\Users\15182\Desktop\summer_sci\LIT101_Normal.xlsx')
+    wbn = xlrd3.open_workbook("C:\\Users\\15182\\Desktop\\summer_sci\\LIT101_Normal.xlsx")
     worksheet_normal = wbn.sheet_by_index(0)
-    colvalues_normal = np.array(worksheet_normal.col_values(1,36000,486000), dtype='float32').reshape((-1,1))#舍弃前期不稳定数据
-    Max_normal = max(worksheet_normal.col_values(1,36000,486000),key = abs)#寻找最大值
+    colvalues_normal = np.array(worksheet_normal.col_values(1,16000,496000), dtype='float32').reshape((-1,1))#舍弃前期不稳定数据
+    Max_normal = max(worksheet_normal.col_values(1,16000,496000),key = abs)#寻找最大值
     print(Max_normal)
     for i in range(0,len(colvalues_normal)):
         colvalues_normal[i] = colvalues_normal[i] / Max_normal
@@ -52,7 +52,7 @@ def make_xlsx():
     data.to_excel(writer, 'page_1', float_format='%.5f')  # ‘page_1’是写入excel的sheet名
     writer.save() 
        
-    wba = xlrd3.open_workbook(u'C:\Users\15182\Desktop\summer_sci\LIT101_Attack.xlsx')
+    wba = xlrd3.open_workbook(u"C:\\Users\\15182\\Desktop\\summer_sci\\LIT101_Attack.xlsx")
     worksheet_attack = wba.sheet_by_index(0)
     colvalues_attack = np.array(worksheet_attack.col_values(1,1,449000), dtype='float32').reshape((-1,1))#舍弃前期不稳定数据
     Max_attack = max(worksheet_attack.col_values(1,1,449000),key = abs)#寻找最大值
@@ -80,7 +80,7 @@ def get_train_data(sheet, col):
 
 #寻找最大绝对偏差值，以及计算最大绝对偏差比率
 def get_max():
-    wb_train = xlrd3.open_workbook(u'C:\Users\15182\Desktop\summer_sci\Traindata.xlsx')
+    wb_train = xlrd3.open_workbook(u'C:\\Users\\15182\Desktop\\summer_sci\\Traindata.xlsx')
     worksheet_train = wb_train.sheet_by_index(0)
     max_abs_bias = 0
     max_abs_percentage = 0
@@ -121,7 +121,7 @@ def get_max():
 #360000
 #388000
 def begin_test():
-    wb_train = xlrd3.open_workbook(u'C:\Users\15182\Desktop\summer_sci\Testdata.xlsx')
+    wb_train = xlrd3.open_workbook(u'C:\\Users\\15182\\Desktop\\summer_sci\\Testdata.xlsx')
     worksheet_train = wb_train.sheet_by_index(0)
     max_z = 0.08
     for i in range(0,399999-2000-257,2000):
@@ -130,7 +130,7 @@ def begin_test():
         input_layer = np.lib.stride_tricks.as_strided(input_layer, shape=(ans_output.shape[0], 256, 1),
                                                       strides=(input_layer.strides[0], input_layer.strides[0],
                                                                input_layer.strides[0]))
-        predicted_train = model(input_layer)*-36.8
+        predicted_train = model(input_layer)
         bias = abs(predicted_train - ans_output)
         num = 0
         for j in range(0,2000,20) :
@@ -146,16 +146,16 @@ def begin_test():
                     num =0
 
 #调用处理数据函数
-while (1==0):
+while (1==1):
     make_xlsx()
     break
 
 #加载处理后的数据作为训练时test
-wb = xlrd3.open_workbook(u'C:\Users\15182\Desktop\summer_sci\Traindata.xlsx')
+wb = xlrd3.open_workbook(u'C:\\Users\\15182\\Desktop\\summer_sci\\Traindata.xlsx')
 worksheet_test = wb.sheet_by_index(0)
-test_in = np.array(worksheet_test.col_values(1, 350000, 350000 + read_batch + 255),
+test_in = np.array(worksheet_test.col_values(1, 450000, 450000 + read_batch + 255),
                    dtype='float32').reshape((-1, 1, 1))
-test_out = np.array(worksheet_test.col_values(1, 350000 + 256, 350000 + read_batch + 256)).reshape((-1, 1))
+test_out = np.array(worksheet_test.col_values(1, 450000 + 256, 450000 + read_batch + 256)).reshape((-1, 1))
 test_in = np.lib.stride_tricks.as_strided(test_in, shape=(test_out.shape[0], 256, 1),
                                               strides=(test_in.strides[0], test_in.strides[0],
                                               test_in.strides[0]))
@@ -165,26 +165,26 @@ test_in = np.lib.stride_tricks.as_strided(test_in, shape=(test_out.shape[0], 256
 while (1==0):
     history = build().fit(get_train_data(worksheet_test,1), epochs=4, steps_per_epoch=2000, batch_size=100,
                 validation_data=(test_in, test_out), validation_batch_size=100)#5~10次便可以实现收敛，次数过多容易导致过拟合
-    build().save('1D_CNN_ICS.hdf5')
+    build().save('1D_CNN_ICS.h5')
     break
 
 #调用已经训练完毕的模型
-model=tf.keras.models.load_model('1D_CNN_ICS.hdf5')
+model=tf.keras.models.load_model('1D_CNN_ICS.h5')
 print('\n',"The model test_id:006 has been successfully called! ",'\n')
 for i in range(1,4):
-        winsound.Beep(2000,500)
-        winsound.Beep(500,500)
-        sleep(1.5)
+        winsound.Beep(2000,300)
+        winsound.Beep(500,300)
+        sleep(1)
 model.summary()
 
 
-while (1 ==1):
+while (1 ==0):
     #加载处理后的数据作为 验证数据
-    wb = xlrd3.open_workbook(u'C:\Users\15182\Desktop\summer_sci\Traindata.xlsx')
+    wb = xlrd3.open_workbook(u'C:\\Users\\15182\\Desktop\\summer_sci\\Traindata.xlsx')
     worksheet_test = wb.sheet_by_index(0)
     #截取验证集合用以绘图
-    input_layour = np.array(worksheet_test.col_values(1, 200000,  200000 + read_batch + 255), dtype='float32').reshape((-1, 1, 1))
-    output_layour = np.array(worksheet_test.col_values(1,  200000 + 256  ,  200000 + read_batch + 256 ), dtype='float32').reshape((-1, 1))
+    input_layour = np.array(worksheet_test.col_values(1, 450000, 450000 + read_batch + 255), dtype='float32').reshape((-1, 1, 1))
+    output_layour = np.array(worksheet_test.col_values(1,  450000 + 256, 450000 + read_batch + 256 ), dtype='float32').reshape((-1, 1))
     input_layour = np.lib.stride_tricks.as_strided(input_layour, shape=(output_layour.shape[0], 256, 1),
                                                                 strides=(input_layour.strides[0], 
                                                                         input_layour.strides[0],
