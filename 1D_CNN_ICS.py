@@ -146,7 +146,7 @@ def begin_test():
                     num =0
 
 #调用处理数据函数
-while (1==1):
+while (1==0):
     make_xlsx()
     break
 
@@ -178,18 +178,18 @@ for i in range(1,4):
 model.summary()
 
 
-while (1 ==0):
+while (1 ==1):
     #加载处理后的数据作为 验证数据
-    wb = xlrd3.open_workbook(u'C:\\Users\\15182\\Desktop\\summer_sci\\Traindata.xlsx')
+    wb = xlrd3.open_workbook(u'C:\\Users\\15182\\Desktop\\summer_sci\\Testdata.xlsx')
     worksheet_test = wb.sheet_by_index(0)
     #截取验证集合用以绘图
-    input_layour = np.array(worksheet_test.col_values(1, 450000, 450000 + read_batch + 255), dtype='float32').reshape((-1, 1, 1))
-    output_layour = np.array(worksheet_test.col_values(1,  450000 + 256, 450000 + read_batch + 256 ), dtype='float32').reshape((-1, 1))
+    input_layour = np.array(worksheet_test.col_values(1, 360000, 360000 + read_batch + 255), dtype='float32').reshape((-1, 1, 1))
+    output_layour = np.array(worksheet_test.col_values(1,  360000 + 256, 360000 + read_batch + 256 ), dtype='float32').reshape((-1, 1))
     input_layour = np.lib.stride_tricks.as_strided(input_layour, shape=(output_layour.shape[0], 256, 1),
                                                                 strides=(input_layour.strides[0], 
                                                                         input_layour.strides[0],
                                                                 input_layour.strides[0]))
-    predicted = model.predict(input_layour,batch_size = 100)
+    predicted = model.predict(input_layour,batch_size = 100)*18.3
     #绘制偏差图 test_bias
     x=np.linspace(0.5,1.1,100)
     y=np.linspace(0.5,1.1,100)
@@ -204,19 +204,19 @@ while (1 ==0):
     plt.savefig('test_bias.png', dpi=200, bbox_inches='tight', transparent=False)
     plt.show()
     #绘制时间序列图 test_time
-    bias = abs(output_layour - predicted)*20
-    percentage = (bias/output_layour)/20
+    bias = abs(output_layour - predicted)*5
+    percentage = (bias/output_layour)/5
     x=np.linspace(1,2000,2000)
     plt.plot(x,predicted,color='green',linewidth=1.0,linestyle='--',label='line')
     plt.plot(x,output_layour,color='red',linewidth=1.0,linestyle='--',label='line')
     plt.plot(x,bias,color='black',linewidth=1.0,linestyle='--',label='line')
-    plt.plot(x,percentage,color='yellow',linewidth=1.0,linestyle='--',label='line')
+    #plt.plot(x,percentage,color='yellow',linewidth=1.0,linestyle='--',label='line')
     plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
     plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
-    plt.legend(["传感器读数预测值","传感器读数真实值","绝对误差(*20)","绝对误差比率"])
-    plt.title("预测值与真实值随时间序列的变化")
-    plt.xlabel('时间序列')
-    plt.ylabel('特征值')
+    plt.legend(["传感器读数预测值","传感器读数真实值","偏差分数"])
+    #plt.title("预测值与真实值随时间序列的变化")
+    plt.xlabel('时间')
+    plt.ylabel('传感器读数')
     plt.savefig('test_time.png', dpi=200, bbox_inches='tight', transparent=False)
     plt.show()
     break
