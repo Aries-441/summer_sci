@@ -23,17 +23,15 @@ read_batch=2000
 def build():
     model = models.Sequential()
     model.add(layers.Conv1D(32, 2, activation = "relu", padding='same', input_shape=(256,1)))
-    model.add(layers.Conv1D(32, 2, activation = "relu", padding='same'))
-    model.add(layers.MaxPooling1D(2,strides=2))#output 128
-    model.add(layers.Conv1D(64, 2, activation = "relu", padding='same'))
-    model.add(layers.Conv1D(64, 2, activation = "relu", padding='same'))
-    model.add(layers.MaxPooling1D(2,strides=2))#output 64
+    model.add(layers.MaxPool1D(2,2))
+    model.add(layers.GRU(32, return_sequences = True))
+    model.add(layers.GRU(32, return_sequences = True))
+    model.add(layers.TimeDistributed(layers.Dense(16)))
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.27))#防止过拟合，需要调整
-    model.add(layers.Dense(16))
     model.add(layers.Dense(1))
-    model.summary()
     model.compile(optimizer='adam',loss='mean_squared_error')
+    model.summary()
     return model
 
 #加载原始数据
@@ -183,13 +181,13 @@ while (1 ==1):
     wb = xlrd3.open_workbook(u'C:\\Users\\15182\\Desktop\\summer_sci\\Testdata.xlsx')
     worksheet_test = wb.sheet_by_index(0)
     #截取验证集合用以绘图
-    input_layour = np.array(worksheet_test.col_values(1, 360000, 360000 + read_batch + 255), dtype='float32').reshape((-1, 1, 1))
-    output_layour = np.array(worksheet_test.col_values(1,  360000 + 256, 360000 + read_batch + 256 ), dtype='float32').reshape((-1, 1))
+    input_layour = np.array(worksheet_test.col_values(1, 350000, 350000 + read_batch + 255), dtype='float32').reshape((-1, 1, 1))
+    output_layour = np.array(worksheet_test.col_values(1,  350000 + 256, 350000 + read_batch + 256 ), dtype='float32').reshape((-1, 1))
     input_layour = np.lib.stride_tricks.as_strided(input_layour, shape=(output_layour.shape[0], 256, 1),
                                                                 strides=(input_layour.strides[0], 
                                                                         input_layour.strides[0],
                                                                 input_layour.strides[0]))
-    predicted = model.predict(input_layour,batch_size = 100)*18.3
+    predicted = model.predict(input_layour,batch_size = 50)*50*3.5
     #绘制偏差图 test_bias
     x=np.linspace(0.5,1.1,100)
     y=np.linspace(0.5,1.1,100)
