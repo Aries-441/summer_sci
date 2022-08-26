@@ -26,7 +26,7 @@ def build():
     model.add(layers.MaxPool1D(2,2))
     model.add(layers.GRU(32, return_sequences = True))
     model.add(layers.GRU(32, return_sequences = True))
-    model.add(layers.TimeDistributed(layers.Dense(16)))
+    model.add(layers.TimeDistributed(layers.Dense(10)))
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.27))#防止过拟合，需要调整
     model.add(layers.Dense(1))
