@@ -23,10 +23,11 @@ read_batch=2000
 def build():
     model = models.Sequential()
     model.add(layers.Conv1D(32, 2, activation = "relu", padding='same', input_shape=(256,1)))
+    model.add(layers.Conv1D(32, 2, activation = "relu", padding='same', input_shape=(256,1)))
     model.add(layers.MaxPool1D(2,2))
-    model.add(layers.GRU(32, return_sequences = True))
-    model.add(layers.GRU(32, return_sequences = True))
-    model.add(layers.TimeDistributed(layers.Dense(10)))
+    model.add(layers.Conv1D(64, 2, activation = "relu", padding='same', input_shape=(256,1)))
+    model.add(layers.Conv1D(64, 2, activation = "relu", padding='same', input_shape=(256,1)))
+    model.add(layers.MaxPool1D(2,2))
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.27))#防止过拟合，需要调整
     model.add(layers.Dense(1))
@@ -85,7 +86,6 @@ def get_max():
     mean_abs_bias = 0
     mean_abs_percentage = 0
     mean_bias = 0
-    standard_deviation = 0
     for i in range(1,400000,read_batch):
         input_layer=np.array(worksheet_train.col_values(1, i, i + read_batch + 255), dtype='float32').reshape((-1,1,1))
         ans_output=np.array(worksheet_train.col_values(1, i + 256, i + read_batch + 256)).reshape((-1, 1))#model.predict(input_layer, verbose=0)
@@ -95,22 +95,18 @@ def get_max():
         predicted_train = model.predict(input_layer, verbose=0)*18.3
         bias = np.array(predicted_train - ans_output,  dtype='float32').reshape((-1, 1))
         value = np.array((bias), dtype='float32').reshape((-1, 1)) 
-        standard_deviation += np.sum(value**2) 
         mean_abs_bias += np.mean(abs(bias))
         mean_abs_percentage += np.mean(abs(bias) / ans_output)
         mean_bias += np.mean(bias)
         if np.max(abs(bias)) > max_abs_bias:
             max_abs_bias = np.max(abs(predicted_train - ans_output))            
         if np.max(abs(bias) / ans_output) > max_abs_percentage:
-            max_abs_percentage = np.max(abs(bias) / ans_output)
-    standard_deviation = math.pow((standard_deviation / 400000),0.5)
-    print('standard_deviation: ',standard_deviation)    
+            max_abs_percentage = np.max(abs(bias) / ans_output)  
     print('max_abs_bias: ',max_abs_bias)
     print('max_abs_percentage: ',max_abs_percentage)    
     print('mean_abs_bias: ',mean_abs_bias/(400000/2000))
     print('mean_abs_percentage: ',mean_abs_percentage/(400000/2000))
     print('mean_bias: ',mean_bias / (400000/2000))
-    return mean_bias,standard_deviation   
     
 #寻找攻击点位
 #点位：
@@ -121,14 +117,14 @@ def get_max():
 def begin_test():
     wb_train = xlrd3.open_workbook(u'C:\\Users\\15182\\Desktop\\summer_sci\\Testdata.xlsx')
     worksheet_train = wb_train.sheet_by_index(0)
-    max_z = 0.08
+    max_z = 0.08417777585983277
     for i in range(0,399999-2000-257,2000):
         input_layer=np.array(worksheet_train.col_values(1, i, i + read_batch + 255), dtype='float32').reshape((-1,1,1))
         ans_output=np.array(worksheet_train.col_values(1, i + 256, i + read_batch + 256)).reshape((-1, 1))#model.predict(input_layer, verbose=0)
         input_layer = np.lib.stride_tricks.as_strided(input_layer, shape=(ans_output.shape[0], 256, 1),
                                                       strides=(input_layer.strides[0], input_layer.strides[0],
                                                                input_layer.strides[0]))
-        predicted_train = model(input_layer)
+        predicted_train = model(input_layer)*18.3
         bias = abs(predicted_train - ans_output)
         num = 0
         for j in range(0,2000,20) :
@@ -181,13 +177,13 @@ while (1 ==1):
     wb = xlrd3.open_workbook(u'C:\\Users\\15182\\Desktop\\summer_sci\\Testdata.xlsx')
     worksheet_test = wb.sheet_by_index(0)
     #截取验证集合用以绘图
-    input_layour = np.array(worksheet_test.col_values(1, 350000, 350000 + read_batch + 255), dtype='float32').reshape((-1, 1, 1))
-    output_layour = np.array(worksheet_test.col_values(1,  350000 + 256, 350000 + read_batch + 256 ), dtype='float32').reshape((-1, 1))
+    input_layour = np.array(worksheet_test.col_values(1, 370000, 370000 + read_batch + 255), dtype='float32').reshape((-1, 1, 1))
+    output_layour = np.array(worksheet_test.col_values(1,  370000 + 256, 370000 + read_batch + 256 ), dtype='float32').reshape((-1, 1))
     input_layour = np.lib.stride_tricks.as_strided(input_layour, shape=(output_layour.shape[0], 256, 1),
                                                                 strides=(input_layour.strides[0], 
                                                                         input_layour.strides[0],
                                                                 input_layour.strides[0]))
-    predicted = model.predict(input_layour,batch_size = 50)*50*3.5
+    predicted = model.predict(input_layour,batch_size = 50)*18.3
     #绘制偏差图 test_bias
     x=np.linspace(0.5,1.1,100)
     y=np.linspace(0.5,1.1,100)
@@ -219,29 +215,18 @@ while (1 ==1):
     plt.show()
     break
 
-
-
-
 #调用，查看在normal_dataset中最大值
-#mean_bias,standard_deviation = get_max()
-#begin_test()
+get_max()
+begin_test()
 
-
-loss = history.history['loss']
-val_loss = history.history['val_loss']
-epochs = range(1,len(loss) + 1)
-plt.plot(epochs, loss, 'bo',label = 'Training loss')
-plt.plot(epochs, val_loss, 'b',label = 'Validation loss')
-plt.legend(["loss","val_loss"])
-plt.title('Training and validation loss')
-plt.savefig('Training_and_validation_loss', dpi=200, bbox_inches='tight', transparent=False)
-plt.show()
-
-
-
-
-                
-                
-        
-
-
+while(1 == 0):
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    epochs = range(1,len(loss) + 1)
+    plt.plot(epochs, loss, 'bo',label = 'Training loss')
+    plt.plot(epochs, val_loss, 'b',label = 'Validation loss')
+    plt.legend(["loss","val_loss"])
+    plt.title('Training and validation loss')
+    plt.savefig('Training_and_validation_loss', dpi=200, bbox_inches='tight', transparent=False)
+    plt.show()
+    break
